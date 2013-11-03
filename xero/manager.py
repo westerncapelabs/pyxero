@@ -15,7 +15,7 @@ class Manager(object):
 
     DATETIME_FIELDS = (u'UpdatedDateUTC', u'Updated', u'FullyPaidOnDate')
     DATE_FIELDS = (u'DueDate', u'Date')
-    BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer')
+    BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer', u'IsReconciled')
 
     MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
