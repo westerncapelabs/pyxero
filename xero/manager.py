@@ -17,10 +17,14 @@ class Manager(object):
     DATE_FIELDS = (u'DueDate', u'Date')
     BOOLEAN_FIELDS = (u'IsSupplier', u'IsCustomer', u'IsReconciled')
 
-    MULTI_LINES = (u'LineItem', u'Phone', u'Address', 'TaxRate')
+    MULTI_LINES = (u'LineItem', u'Phone', u'Address', u'TaxRate', u'Row')
     PLURAL_EXCEPTIONS = {'Addresse': 'Address'}
     
     NO_SEND_FIELDS = (u'UpdatedDateUTC',)
+
+    REPORTS_PARAMS = {
+        "BankStatement": (u'bankAccountID', u'fromDate', u'toDate')
+    }
 
     def __init__(self, name, oauth):
         self.oauth = oauth
@@ -250,10 +254,32 @@ class Manager(object):
                     get_filter_params()
                 )
 
-            params = [generate_param(key) for key in kwargs.keys()]
-
-            if params:
-                uri += '?where=' + urllib.quote('&&'.join(params))
+            if self.name == "Reports" and "report" in kwargs:  # Reports have different URL format
+                uri += "/" + kwargs['report'] # Append the report name to URI first
+                report_params = []
+                where_params = []
+                for param in kwargs.keys():
+                    if param in self.REPORTS_PARAMS[kwargs['report']]:
+                        # its a special param
+                        report_params.append(param)
+                    elif param is not "report":
+                        # its a plain old where param
+                        where_params.append(param)
+                # Make nice params
+                params = ['%s=%s' % (key, str(kwargs[key])) for key in report_params]
+                if params:
+                    uri += "?" + '&'.join(params)
+                # Turn the rest of kwargs into where clause if there are any
+                params_where = [generate_param(key) for key in where_params]
+                if params_where:
+                    if params:
+                        uri += '&where=' + urllib.quote('&&'.join(params_where))
+                    else:
+                        uri += '?where=' + urllib.quote('&&'.join(params_where))
+            else:
+                params = [generate_param(key, "==") for key in kwargs.keys()]
+                if params:
+                    uri += '?where=' + urllib.quote('&&'.join(params))
 
         return uri, 'get', None, headers
 
